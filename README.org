@@ -107,6 +107,12 @@ Here is an example of configuring mini-posframe to display in the top-right, wit
   (mini-posframe-mode 1))
 #+end_src
 
+** Ex 1:
+[[file:top-right.png]]
+
+** Ex 2:
+[[file:bottom-center-huge.png]]
+
 * Installation
 ** Spacemacs
 Add it as a recipe in =dotspacemacs-additional-packages=:
