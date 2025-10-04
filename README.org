@@ -56,9 +56,9 @@ The top/bottom positions respect vertical fringes, and left/right positions resp
 + =mini-posframe-parameters= (alist) – extra frame parameters passed to =posframe-show=.
   By default only =(undecorated . nil)= is set.
 
-Faces:
-+ =minibuffer-posframe= – controls text appearance.
-+ =minibuffer-posframe-border= – controls border appearance.
+*** Faces:
++ =mini-posframe-face= – controls text appearance.
++ =mini-posframe-border-face= – controls border appearance.
 
 * Commands
 + =mini-posframe-mode= – global minor mode to enable minibuffer mirroring.
@@ -81,6 +81,31 @@ Optional integration keeps behavior consistent with =helm-posframe=:
 + Font scale: =1.4= relative to =default=.
 + Border width: =3=.
 + Parameters: ~(undecorated . nil)~
+  + Set in order to get the rounded borders on MacOS. Set to =(undecorated . t)= for undecorated on other OS's.
+
+* Example Configuration
+Here is an example of configuring mini-posframe to display in the top-right, with ~mini-posframe-font-size=1~ and ~width=100~ characters:
+
+** Using =setq=:
+#+begin_src emacs-lisp
+(setq mini-posframe-position 'top-right
+      mini-posframe-font-size 1
+      mini-posframe-width 100)
+
+(mini-posframe-mode 1)
+#+end_src
+
+** Using =use-package=:
+#+begin_src emacs-lisp
+(use-package mini-posframe
+  :load-path "~/path/to/mini-posframe"
+  :custom
+  (mini-posframe-position 'top-right)
+  (mini-posframe-font-size 1)
+  (mini-posframe-width 100)
+  :config
+  (mini-posframe-mode 1))
+#+end_src
 
 * Installation
 ** Spacemacs
