@@ -1,0 +1,104 @@
+#+title: mini-posframe
+#+author: JoshTRN
+#+options: toc:2
+
+=mini-posframe= mirrors the active minibuffer inside a child frame (posframe).
+It was built on top of [[https://github.com/tumashu/posframe][posframe]], with the intent of providing a consistent,
+session-scoped minibuffer experience in *Spacemacs*.
+
+*⚠️ Disclaimer:*
+This package was designed and tested in *Spacemacs*.
+It was written with *Evil* integration in mind and tested with =:Eval= workflows.
+I do not guarantee compatibility with Spacemacs let alone Doom Emacs, vanilla Emacs configs, or other distributions.
+
+* Features
++ Displays minibuffer input inside a posframe instead of the echo area.
++ Tracks the cursor visually with a fake cursor overlay.
++ Automatically hides the real minibuffer for a distraction-free look.
++ Session-scoped: posframe appears only during minibuffer usage and is cleaned up afterwards.
++ Includes optional compatibility fixes for =helm-posframe= to keep behavior consistent.
+
+* Customization
+All user options can be customized via:
+: M-x customize-group RET mini-posframe RET
+
+** Positioning
+#+begin_src emacs-lisp
+(defcustom mini-posframe-position 'top-center
+  "Where to display the mini-posframe."
+  :type '(choice
+          (const :tag "Top center" top-center)
+          (const :tag "Center" center)
+          (const :tag "Bottom center" bottom-center)
+          (const :tag "Top left" top-left)
+          (const :tag "Left" left)
+          (const :tag "Bottom left" bottom-left)
+          (const :tag "Top right" top-right)
+          (const :tag "Right" right)
+          (const :tag "Bottom right" bottom-right)))
+#+end_src
+
+You can choose any of the above symbols.
+The top/bottom positions respect vertical fringes, and left/right positions respect horizontal fringes.
+
+** Fringes
++ =mini-posframe-vertical-fringe= (default =0.10=) – fraction of parent frame height to offset vertically.
++ =mini-posframe-horizontal-fringe= (default =0.05=) – fraction of parent frame width to offset horizontally.
+
+** Size
++ =mini-posframe-width= (default =60=) – width in characters.
++ =mini-posframe-height= (default =1=) – fixed height in lines.
+  When set to =1=, height is determined dynamically from content.
+
+** Appearance
++ =mini-posframe-font-size= – relative scale factor for font height.
++ =mini-posframe-border-width= – internal border width (pixels).
++ =mini-posframe-parameters= (alist) – extra frame parameters passed to =posframe-show=.
+  By default only =(undecorated . nil)= is set.
+
+Faces:
++ =minibuffer-posframe= – controls text appearance.
++ =minibuffer-posframe-border= – controls border appearance.
+
+* Commands
++ =mini-posframe-mode= – global minor mode to enable minibuffer mirroring.
++ =mini-posframe-reset= – forcibly reset and restart the mode.
+
+Cleanup hooks ensure state resets when minibuffer exits.
+
+* Helm Posframe Compatibility
+Optional integration keeps behavior consistent with =helm-posframe=:
++ Defensive advice around =helm-ff-delete-char-backward-with-subkeys= to prevent nil-command execution.
++ Advice loaded only if =helm-posframe= is present.
++ Lifecycle hooks ensure it applies only when =helm-posframe= is enabled.
+
+⚠️ Not tested with Ivy, Counsel, Vertico, or other completion frameworks.
+
+* Defaults Summary
++ Position: =top-center= (10% from top, centered horizontally).
++ Width: =60= characters.
++ Height: dynamic (=1= → auto-fit).
++ Font scale: =1.4= relative to =default=.
++ Border width: =3=.
++ Parameters: ~(undecorated . nil)~
+
+* Installation
+** Spacemacs
+Add it as a recipe in =dotspacemacs-additional-packages=:
+#+begin_src emacs-lisp
+(helm-posframe :location (recipe :fetcher github :repo "JoshTRN/mini-posframe"))
+#+end_src
+
+Or place it in a private layer and =require= it manually.
+
+** Vanilla Emacs
+Clone into your load-path and enable:
+#+begin_src emacs-lisp
+(use-package mini-posframe
+  :load-path "~/path/to/mini-posframe"
+  :config
+  (mini-posframe-mode 1))
+#+end_src
+
+* License
+GNU GPLv3
