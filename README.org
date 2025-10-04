@@ -4,7 +4,9 @@
 
 =mini-posframe= mirrors the active minibuffer inside a child frame (posframe). It was built on top of [[https://github.com/tumashu/posframe][posframe]], with the intent of providing a consistent, session-scoped minibuffer experience in *Spacemacs*.
 
-[[file:mini-posframe.webm]]
+#+begin_export html
+<video src="mini-posframe.webm" autoplay loop muted playsinline width="800"></video>
+#+end_export
 
 *⚠️ Disclaimer:*
 This package was designed and tested in *Spacemacs*.
