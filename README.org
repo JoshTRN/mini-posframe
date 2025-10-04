@@ -117,7 +117,7 @@ Here is an example of configuring mini-posframe to display in the top-right, wit
 ** Spacemacs
 Add it as a recipe in =dotspacemacs-additional-packages=:
 #+begin_src emacs-lisp
-(helm-posframe :location (recipe :fetcher github :repo "JoshTRN/mini-posframe"))
+(mini-posframe :location (recipe :fetcher github :repo "JoshTRN/mini-posframe"))
 #+end_src
 
 Or place it in a private layer and =require= it manually.
