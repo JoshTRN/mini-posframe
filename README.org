@@ -2,9 +2,9 @@
 #+author: JoshTRN
 #+options: toc:2
 
-=mini-posframe= mirrors the active minibuffer inside a child frame (posframe).
-It was built on top of [[https://github.com/tumashu/posframe][posframe]], with the intent of providing a consistent,
-session-scoped minibuffer experience in *Spacemacs*.
+=mini-posframe= mirrors the active minibuffer inside a child frame (posframe). It was built on top of [[https://github.com/tumashu/posframe][posframe]], with the intent of providing a consistent, session-scoped minibuffer experience in *Spacemacs*.
+
+[[file:mini-posframe.gif]]
 
 *⚠️ Disclaimer:*
 This package was designed and tested in *Spacemacs*.
