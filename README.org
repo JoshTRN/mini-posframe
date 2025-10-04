@@ -132,4 +132,6 @@ Clone into your load-path and enable:
 #+end_src
 
 * License
-GNU GPLv3
+This project is licensed under the GNU General Public License v3.0.
+
+See the [[file:LICENSE][LICENSE]] file for full text.
