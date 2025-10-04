@@ -6,10 +6,11 @@
 
 [[https://github.com/user-attachments/assets/2ac27d9e-c683-49af-9c0d-e2bf4290b575][Demo video]]
 
-*⚠️ Disclaimer:*
-This package was designed and tested in *Spacemacs*.
-It was written with *Evil* integration in mind and tested with =:Eval= workflows.
-I do not guarantee compatibility with Spacemacs let alone Doom Emacs, vanilla Emacs configs, or other distributions.
+⚠️ Compatibility:
+mini-posframe was built and tested for Spacemacs with Evil workflows.
+It includes advice for Helm integration.
+It has *no advice for Ivy, Counsel, Vertico, or Doom Emacs* — it will likely break in those workflows.
+Contributions for additional compatibility are welcome.
 
 * Features
 + Displays minibuffer input inside a posframe instead of the echo area.
