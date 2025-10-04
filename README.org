@@ -42,6 +42,7 @@ All user options can be customized via:
 You can choose any of the above symbols.
 The top/bottom positions respect vertical fringes, and left/right positions respect horizontal fringes.
 
+[[https://github.com/user-attachments/assets/5b6ab339-908b-406b-8f47-b9f2cfeb4126][Positioning demo]]
 ** Fringes
 + =mini-posframe-vertical-fringe= (default =0.10=) – fraction of parent frame height to offset vertically.
 + =mini-posframe-horizontal-fringe= (default =0.05=) – fraction of parent frame width to offset horizontally.
