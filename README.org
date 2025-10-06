@@ -133,7 +133,7 @@ Or place it in a private layer and =require= it manually.
 
 I set up some personal hotkeys that map directionally onto the left hand for quick positioning:
 
-Layout (maps directionally to left-hand positions) on qwerty:
+Layout (on qwerty):
 
 | ↖️ q | ⬆️ e | ↗️ t |  ← Top row --- top-left, top-center, top-right
 | ⬅️ a | ⬤ d | ➡️ g |  ← Middle row --- center-left, center, center-right
