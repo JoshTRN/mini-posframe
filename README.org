@@ -43,14 +43,17 @@ You can choose any of the above symbols.
 The top/bottom positions respect vertical fringes, and left/right positions respect horizontal fringes.
 
 [[https://github.com/user-attachments/assets/5b6ab339-908b-406b-8f47-b9f2cfeb4126][Positioning demo]]
+
+See [[*Hotkeys][Hotkeys]] for positioning helpers.
+
 ** Fringes
 + =mini-posframe-vertical-fringe= (default =0.10=) – fraction of parent frame height to offset vertically.
 + =mini-posframe-horizontal-fringe= (default =0.05=) – fraction of parent frame width to offset horizontally.
 
 ** Size
 + =mini-posframe-width= (default =60=) – width in characters.
-+ =mini-posframe-height= (default =1=) – fixed height in lines.
-  When set to =1=, height is determined dynamically from content.
++ =mini-posframe-height= (default =1=) – fixed height in lines. When set to =1=, height is determined dynamically from content.
++ There's an interactive resize helper function, =mini-posframe-resize= that allows you to set it dynamically.
 
 ** Appearance
 + =mini-posframe-font-size= – relative scale factor for font height.
@@ -125,6 +128,42 @@ Add it as a recipe in =dotspacemacs-additional-packages=:
 #+end_src
 
 Or place it in a private layer and =require= it manually.
+
+*** Hotkeys
+
+I set up some personal hotkeys that map directionally onto the left hand for quick positioning:
+
+Layout (maps directionally to left-hand positions) on qwerty:
+
+| ↖️ q | ⬆️ e | ↗️ t |  ← Top row maps to --- top-left, top-center, top-right
+| ⬅️ a | ⬤ d | ➡️ g |  ← Middle row --- center-left, center, center-right
+| ↙️ z | ⬇️ c | ↘️ b |  ← Bottom row --- bottom-left, bottom-center, bottom-right
+
+Here’s how the bindings map under =SPC o m=:
+
+#+begin_src elisp :results none
+(spacemacs/declare-prefix "om" "mini-posframe")
+
+(spacemacs/set-leader-keys
+  "omr" #'mini-posframe-resize
+
+  ;; Top row
+  "omq" #'mini-posframe-top-left
+  "ome" #'mini-posframe-top-center
+  "omt" #'mini-posframe-top-right
+
+  ;; Middle row
+  "oma" #'mini-posframe-center-left
+  "omd" #'mini-posframe-center
+  "omg" #'mini-posframe-center-right
+
+  ;; Bottom row
+  "omz" #'mini-posframe-bottom-left
+  "omc" #'mini-posframe-bottom-center
+  "omb" #'mini-posframe-bottom-right)
+#+end_src
+
+This layout allows for *positional muscle memory*. The left-hand keys directly mirror the posframe’s on-screen placement, making quick repositioning natural and fluid.
 
 ** Vanilla Emacs
 Clone into your load-path and enable:

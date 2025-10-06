@@ -131,89 +131,42 @@ the face exists; otherwise fall back to `default'."
 ;; Position handlers
 ;; ───────────────────────────────────────────────────────────────────
 
-(defun mini-posframe-poshandler-top-center (info)
-  "Horizontally centered, vertical fringe from top."
-  (let* ((pfw (plist-get info :parent-frame-width))
-         (pfh (plist-get info :parent-frame-height))
-         (fw  (plist-get info :posframe-width))
-         (x (/ (- pfw fw) 2))
-         (y (max 0 (floor (* pfh mini-posframe-vertical-fringe)))))
-    (cons x y)))
+(defun mini-posframe--make-poshandler (h-align v-align)
+  "Return a poshandler that positions based on H-ALIGN and V-ALIGN.
+H-ALIGN and V-ALIGN are symbols: one of 'left, 'center, 'right and
+'top, 'center, 'bottom respectively."
+  (lambda (info)
+    (let* ((pfw (plist-get info :parent-frame-width))
+           (pfh (plist-get info :parent-frame-height))
+           (fw  (plist-get info :posframe-width))
+           (fh  (plist-get info :posframe-height))
+           (x (pcase h-align
+                ('left   (floor (* pfw mini-posframe-horizontal-fringe)))
+                ('center (/ (- pfw fw) 2))
+                ('right  (max 0 (- (floor (* pfw (- 1 mini-posframe-horizontal-fringe))) fw)))))
+           (y (pcase v-align
+                ('top    (floor (* pfh mini-posframe-vertical-fringe)))
+                ('center (/ (- pfh fh) 2))
+                ('bottom (max 0 (- (floor (* pfh (- 1 mini-posframe-vertical-fringe))) fh))))))
+      (cons x y))))
 
-(defun mini-posframe-poshandler-center (info)
-  "Center both horizontally and vertically."
-  (let* ((pfw (plist-get info :parent-frame-width))
-         (pfh (plist-get info :parent-frame-height))
-         (fw  (plist-get info :posframe-width))
-         (fh  (plist-get info :posframe-height))
-         (x (/ (- pfw fw) 2))
-         (y (/ (- pfh fh) 2)))
-    (cons x y)))
+(setq mini-posframe-poshandler-alist
+      '((top-left     . (top . left))
+        (top-center   . (top . center))
+        (top-right    . (top . right))
+        (center-left  . (center . left))
+        (center       . (center . center))
+        (center-right . (center . right))
+        (bottom-left  . (bottom . left))
+        (bottom-center . (bottom . center))
+        (bottom-right . (bottom . right))))
 
-(defun mini-posframe-poshandler-bottom-center (info)
-  "Horizontally centered, vertical fringe from bottom."
-  (let* ((pfw (plist-get info :parent-frame-width))
-         (pfh (plist-get info :parent-frame-height))
-         (fw  (plist-get info :posframe-width))
-         (fh  (plist-get info :posframe-height))
-         (x (/ (- pfw fw) 2))
-         (y (max 0 (- (floor (* pfh (- 1 mini-posframe-vertical-fringe))) fh))))
-    (cons x y)))
-
-(defun mini-posframe-poshandler-top-left (info)
-  "Offset from top and left fringes."
-  (let* ((pfw (plist-get info :parent-frame-width))
-         (pfh (plist-get info :parent-frame-height))
-         (x (floor (* pfw mini-posframe-horizontal-fringe)))
-         (y (floor (* pfh mini-posframe-vertical-fringe))))
-    (cons x y)))
-
-(defun mini-posframe-poshandler-top-right (info)
-  "Offset from top and right fringes."
-  (let* ((pfw (plist-get info :parent-frame-width))
-         (pfh (plist-get info :parent-frame-height))
-         (fw  (plist-get info :posframe-width))
-         (x (max 0 (- (floor (* pfw (- 1 mini-posframe-horizontal-fringe))) fw)))
-         (y (floor (* pfh mini-posframe-vertical-fringe))))
-    (cons x y)))
-
-(defun mini-posframe-poshandler-bottom-left (info)
-  "Offset from bottom and left fringes."
-  (let* ((pfw (plist-get info :parent-frame-width))
-         (pfh (plist-get info :parent-frame-height))
-         (fh  (plist-get info :posframe-height))
-         (x (floor (* pfw mini-posframe-horizontal-fringe)))
-         (y (max 0 (- (floor (* pfh (- 1 mini-posframe-vertical-fringe))) fh))))
-    (cons x y)))
-
-(defun mini-posframe-poshandler-bottom-right (info)
-  "Offset from bottom and right fringes."
-  (let* ((pfw (plist-get info :parent-frame-width))
-         (pfh (plist-get info :parent-frame-height))
-         (fw  (plist-get info :posframe-width))
-         (fh  (plist-get info :posframe-height))
-         (x (max 0 (- (floor (* pfw (- 1 mini-posframe-horizontal-fringe))) fw)))
-         (y (max 0 (- (floor (* pfh (- 1 mini-posframe-vertical-fringe))) fh))))
-    (cons x y)))
-
-(defun mini-posframe-poshandler-left (info)
-  "Vertically centered, offset from left fringe."
-  (let* ((pfw (plist-get info :parent-frame-width))
-         (pfh (plist-get info :parent-frame-height))
-         (fh  (plist-get info :posframe-height))
-         (x (floor (* pfw mini-posframe-horizontal-fringe)))
-         (y (/ (- pfh fh) 2)))
-    (cons x y)))
-
-(defun mini-posframe-poshandler-right (info)
-  "Vertically centered, offset from right fringe."
-  (let* ((pfw (plist-get info :parent-frame-width))
-         (pfh (plist-get info :parent-frame-height))
-         (fw  (plist-get info :posframe-width))
-         (fh  (plist-get info :posframe-height))
-         (x (max 0 (- (floor (* pfw (- 1 mini-posframe-horizontal-fringe))) fw)))
-         (y (/ (- pfh fh) 2)))
-    (cons x y)))
+(dolist (entry mini-posframe-poshandler-alist)
+  (let* ((name (car entry))
+         (v-align (first (rest entry)))
+         (h-align (rest (rest entry)))
+         (fn-name (intern (format "mini-posframe-poshandler-%s" name))))
+    (fset fn-name (mini-posframe--make-poshandler h-align v-align))))
 
 (defun mini-posframe-poshandler-dispatch (info)
   "Dispatch to the appropriate poshandler based on `mini-posframe-position'."
@@ -233,6 +186,66 @@ the face exists; otherwise fall back to `default'."
   "The poshandler function used by mini-posframe."
   :group 'mini-posframe
   :type 'function)
+
+;; ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+;;                             UTILITIES
+;; ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+(defun mini-posframe-top-left ()
+  (interactive)
+  (setq mini-posframe-position 'top-left)
+  (message "mini-posframe position: top-left"))
+
+(defun mini-posframe-top-center ()
+  (interactive)
+  (setq mini-posframe-position 'top-center)
+  (message "mini-posframe position: top-center"))
+
+(defun mini-posframe-top-right ()
+  (interactive)
+  (setq mini-posframe-position 'top-right)
+  (message "mini-posframe position: top-right"))
+
+(defun mini-posframe-center-left ()
+  (interactive)
+  (setq mini-posframe-position 'left)
+  (message "mini-posframe position: center-left"))
+
+(defun mini-posframe-center ()
+  (interactive)
+  (setq mini-posframe-position 'center)
+  (message "mini-posframe position: center"))
+
+(defun mini-posframe-center-right ()
+  (interactive)
+  (setq mini-posframe-position 'right)
+  (message "mini-posframe position: center-right"))
+
+(defun mini-posframe-bottom-left ()
+  (interactive)
+  (setq mini-posframe-position 'bottom-left)
+  (message "mini-posframe position: bottom-left"))
+
+(defun mini-posframe-bottom-center ()
+  (interactive)
+  (setq mini-posframe-position 'bottom-center)
+  (message "mini-posframe position: bottom-center"))
+
+(defun mini-posframe-bottom-right ()
+  (interactive)
+  (setq mini-posframe-position 'bottom-right)
+  (message "mini-posframe position: bottom-right"))
+
+(defun mini-posframe-resize ()
+  "Interactively resize mini-posframe width and font scale."
+  (interactive)
+  (let ((width (read-number "Width in chars: " mini-posframe-width))
+        (font-scale (read-number "Relative font height: "
+                                 (or mini-posframe-font-size 1.0))))
+    (setq mini-posframe-width width
+          mini-posframe-font-size font-scale)
+    (message "mini-posframe resized: width=%d, font-scale=%.2f"
+             mini-posframe-width mini-posframe-font-size)))
 
 ;; ───────────────────────────────────────────────────────────────────
 ;; Evil search message capture (optional)
@@ -409,7 +422,6 @@ Also remove this function from `post-command-hook' until next session."
 ;; Helm-posframe compatibility (optional)
 ;; ───────────────────────────────────────────────────────────────────
 
-;; Helm-posframe compatibility (optional)
 (when (featurep 'helm-posframe)
   (defun mini-posframe-helm-ff-delete-char-backward-advice (orig-fn &rest args)
     "Around advice for `helm-ff-delete-char-backward-with-subkeys'."
