@@ -156,9 +156,9 @@ Here’s how the bindings map under =SPC o m=:
   "omt" #'mini-posframe-top-right
 
   ;; Middle row
-  "oma" #'mini-posframe-left
+  "oma" #'mini-posframe-center-left
   "omd" #'mini-posframe-center
-  "omg" #'mini-posframe-right
+  "omg" #'mini-posframe-center-right
 
   ;; Bottom row
   "omz" #'mini-posframe-bottom-left
