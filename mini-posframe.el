@@ -131,42 +131,89 @@ the face exists; otherwise fall back to `default'."
 ;; Position handlers
 ;; ───────────────────────────────────────────────────────────────────
 
-(defun mini-posframe--make-poshandler (h-align v-align)
-  "Return a poshandler that positions based on H-ALIGN and V-ALIGN.
-H-ALIGN and V-ALIGN are symbols: one of 'left, 'center, 'right and
-'top, 'center, 'bottom respectively."
-  (lambda (info)
-    (let* ((pfw (plist-get info :parent-frame-width))
-           (pfh (plist-get info :parent-frame-height))
-           (fw  (plist-get info :posframe-width))
-           (fh  (plist-get info :posframe-height))
-           (x (pcase h-align
-                ('left   (floor (* pfw mini-posframe-horizontal-fringe)))
-                ('center (/ (- pfw fw) 2))
-                ('right  (max 0 (- (floor (* pfw (- 1 mini-posframe-horizontal-fringe))) fw)))))
-           (y (pcase v-align
-                ('top    (floor (* pfh mini-posframe-vertical-fringe)))
-                ('center (/ (- pfh fh) 2))
-                ('bottom (max 0 (- (floor (* pfh (- 1 mini-posframe-vertical-fringe))) fh))))))
-      (cons x y))))
+(defun mini-posframe-poshandler-top-center (info)
+  "Horizontally centered, vertical fringe from top."
+  (let* ((pfw (plist-get info :parent-frame-width))
+         (pfh (plist-get info :parent-frame-height))
+         (fw  (plist-get info :posframe-width))
+         (x (/ (- pfw fw) 2))
+         (y (max 0 (floor (* pfh mini-posframe-vertical-fringe)))))
+    (cons x y)))
 
-(setq mini-posframe-poshandler-alist
-      '((top-left     . (top . left))
-        (top-center   . (top . center))
-        (top-right    . (top . right))
-        (center-left  . (center . left))
-        (center       . (center . center))
-        (center-right . (center . right))
-        (bottom-left  . (bottom . left))
-        (bottom-center . (bottom . center))
-        (bottom-right . (bottom . right))))
+(defun mini-posframe-poshandler-center (info)
+  "Center both horizontally and vertically."
+  (let* ((pfw (plist-get info :parent-frame-width))
+         (pfh (plist-get info :parent-frame-height))
+         (fw  (plist-get info :posframe-width))
+         (fh  (plist-get info :posframe-height))
+         (x (/ (- pfw fw) 2))
+         (y (/ (- pfh fh) 2)))
+    (cons x y)))
 
-(dolist (entry mini-posframe-poshandler-alist)
-  (let* ((name (car entry))
-         (v-align (first (rest entry)))
-         (h-align (rest (rest entry)))
-         (fn-name (intern (format "mini-posframe-poshandler-%s" name))))
-    (fset fn-name (mini-posframe--make-poshandler h-align v-align))))
+(defun mini-posframe-poshandler-bottom-center (info)
+  "Horizontally centered, vertical fringe from bottom."
+  (let* ((pfw (plist-get info :parent-frame-width))
+         (pfh (plist-get info :parent-frame-height))
+         (fw  (plist-get info :posframe-width))
+         (fh  (plist-get info :posframe-height))
+         (x (/ (- pfw fw) 2))
+         (y (max 0 (- (floor (* pfh (- 1 mini-posframe-vertical-fringe))) fh))))
+    (cons x y)))
+
+(defun mini-posframe-poshandler-top-left (info)
+  "Offset from top and left fringes."
+  (let* ((pfw (plist-get info :parent-frame-width))
+         (pfh (plist-get info :parent-frame-height))
+         (x (floor (* pfw mini-posframe-horizontal-fringe)))
+         (y (floor (* pfh mini-posframe-vertical-fringe))))
+    (cons x y)))
+
+(defun mini-posframe-poshandler-top-right (info)
+  "Offset from top and right fringes."
+  (let* ((pfw (plist-get info :parent-frame-width))
+         (pfh (plist-get info :parent-frame-height))
+         (fw  (plist-get info :posframe-width))
+         (x (max 0 (- (floor (* pfw (- 1 mini-posframe-horizontal-fringe))) fw)))
+         (y (floor (* pfh mini-posframe-vertical-fringe))))
+    (cons x y)))
+
+(defun mini-posframe-poshandler-bottom-left (info)
+  "Offset from bottom and left fringes."
+  (let* ((pfw (plist-get info :parent-frame-width))
+         (pfh (plist-get info :parent-frame-height))
+         (fh  (plist-get info :posframe-height))
+         (x (floor (* pfw mini-posframe-horizontal-fringe)))
+         (y (max 0 (- (floor (* pfh (- 1 mini-posframe-vertical-fringe))) fh))))
+    (cons x y)))
+
+(defun mini-posframe-poshandler-bottom-right (info)
+  "Offset from bottom and right fringes."
+  (let* ((pfw (plist-get info :parent-frame-width))
+         (pfh (plist-get info :parent-frame-height))
+         (fw  (plist-get info :posframe-width))
+         (fh  (plist-get info :posframe-height))
+         (x (max 0 (- (floor (* pfw (- 1 mini-posframe-horizontal-fringe))) fw)))
+         (y (max 0 (- (floor (* pfh (- 1 mini-posframe-vertical-fringe))) fh))))
+    (cons x y)))
+
+(defun mini-posframe-poshandler-left (info)
+  "Vertically centered, offset from left fringe."
+  (let* ((pfw (plist-get info :parent-frame-width))
+         (pfh (plist-get info :parent-frame-height))
+         (fh  (plist-get info :posframe-height))
+         (x (floor (* pfw mini-posframe-horizontal-fringe)))
+         (y (/ (- pfh fh) 2)))
+    (cons x y)))
+
+(defun mini-posframe-poshandler-right (info)
+  "Vertically centered, offset from right fringe."
+  (let* ((pfw (plist-get info :parent-frame-width))
+         (pfh (plist-get info :parent-frame-height))
+         (fw  (plist-get info :posframe-width))
+         (fh  (plist-get info :posframe-height))
+         (x (max 0 (- (floor (* pfw (- 1 mini-posframe-horizontal-fringe))) fw)))
+         (y (/ (- pfh fh) 2)))
+    (cons x y)))
 
 (defun mini-posframe-poshandler-dispatch (info)
   "Dispatch to the appropriate poshandler based on `mini-posframe-position'."

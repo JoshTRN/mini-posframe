@@ -135,9 +135,12 @@ I set up some personal hotkeys that map directionally onto the left hand for qui
 
 Layout (on qwerty):
 
-| ↖️ q | ⬆️ e | ↗️ t |  ← Top row --- top-left, top-center, top-right
-| ⬅️ a | ⬤ d | ➡️ g |  ← Middle row --- center-left, center, center-right
-| ↙️ z | ⬇️ c | ↘️ b |  ← Bottom row --- bottom-left, bottom-center, bottom-right
+|-------+-------+-------+-----------------------------------------------------------|
+| ↖️ q | ⬆️ e | ↗️ t | ← Top row --- top-left, top-center, top-right             |
+|-------+-------+-------+-----------------------------------------------------------|
+| ⬅️ a | ⬤ d | ➡️ g | ← Middle row --- center-left, center, center-right        |
+|-------+-------+-------+-----------------------------------------------------------|
+| ↙️ z | ⬇️ c | ↘️ b | ← Bottom row --- bottom-left, bottom-center, bottom-right |
 
 Here’s how the bindings map under =SPC o m=:
 
@@ -153,9 +156,9 @@ Here’s how the bindings map under =SPC o m=:
   "omt" #'mini-posframe-top-right
 
   ;; Middle row
-  "oma" #'mini-posframe-center-left
+  "oma" #'mini-posframe-left
   "omd" #'mini-posframe-center
-  "omg" #'mini-posframe-center-right
+  "omg" #'mini-posframe-right
 
   ;; Bottom row
   "omz" #'mini-posframe-bottom-left
