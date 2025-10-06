@@ -135,7 +135,7 @@ I set up some personal hotkeys that map directionally onto the left hand for qui
 
 Layout (maps directionally to left-hand positions) on qwerty:
 
-| ↖️ q | ⬆️ e | ↗️ t |  ← Top row maps to --- top-left, top-center, top-right
+| ↖️ q | ⬆️ e | ↗️ t |  ← Top row --- top-left, top-center, top-right
 | ⬅️ a | ⬤ d | ➡️ g |  ← Middle row --- center-left, center, center-right
 | ↙️ z | ⬇️ c | ↘️ b |  ← Bottom row --- bottom-left, bottom-center, bottom-right
 
