@@ -56,11 +56,19 @@
   :type 'integer)
 
 (defcustom mini-posframe-height 1
-  "The height of mini-posframe (in lines).
-When set to 1, the posframe’s height is determined dynamically
-based on its content."
+  "Minimum height of mini-posframe, in lines.
+The posframe grows beyond this height when its content uses more lines."
   :group 'mini-posframe
   :type 'integer)
+
+(defcustom mini-posframe-max-height 10
+  "Maximum height of mini-posframe, in lines.
+When a minibuffer would need more lines than this, do not use a posframe
+for the rest of that minibuffer session.  The regular minibuffer remains
+visible instead.  Set this to nil to allow unlimited vertical growth."
+  :group 'mini-posframe
+  :type '(choice (const :tag "No limit" nil)
+                 (integer :tag "Maximum lines")))
 
 (defcustom mini-posframe-font-size 1.4
   "Relative font size factor for mini-posframe.
@@ -126,6 +134,15 @@ the face exists; otherwise fall back to `default'."
 
 (defvar mini-posframe-last-message nil
   "Last status message to display in the mini-posframe (e.g., Evil search).")
+
+(defvar-local mini-posframe--session-disabled nil
+  "Non-nil when the current minibuffer session must not use a posframe.")
+
+(defvar-local mini-posframe--minibuffer-overlay nil
+  "Overlay used to hide the real minibuffer in the current session.")
+
+(defvar-local mini-posframe--original-cursor-type nil
+  "Value of `cursor-type' before mini-posframe hid the minibuffer.")
 
 ;; ───────────────────────────────────────────────────────────────────
 ;; Position handlers
@@ -327,7 +344,30 @@ the face exists; otherwise fall back to `default'."
   (and (active-minibuffer-window)
        (window-live-p (active-minibuffer-window))
        (minibufferp (window-buffer (active-minibuffer-window)))
+       (not (buffer-local-value 'mini-posframe--session-disabled
+                                (window-buffer (active-minibuffer-window))))
        (not (bound-and-true-p helm-alive-p))))
+
+(defun mini-posframe--display-line-count (string width)
+  "Return the number of display lines needed by STRING at WIDTH."
+  (let ((width (max 1 width))
+        (count 0))
+    (dolist (line (split-string string "\n" nil) (max 1 count))
+      (setq count (+ count
+                     (max 1 (ceiling (float (string-width line)) width)))))))
+
+(defun mini-posframe--restore-minibuffer ()
+  "Remove mini-posframe's visual hiding from the current minibuffer."
+  (when (overlayp mini-posframe--minibuffer-overlay)
+    (delete-overlay mini-posframe--minibuffer-overlay))
+  (setq mini-posframe--minibuffer-overlay nil
+        cursor-type mini-posframe--original-cursor-type))
+
+(defun mini-posframe--disable-session ()
+  "Use the regular minibuffer for the rest of the current session."
+  (setq mini-posframe--session-disabled t)
+  (mini-posframe--restore-minibuffer)
+  (mini-posframe-hide))
 
 (defun mini-posframe-refresh ()
   "Safely mirror minibuffer in a posframe, with fake cursor tracking."
@@ -341,44 +381,50 @@ the face exists; otherwise fall back to `default'."
                             (buffer-substring (point-min) (point-max))))
                      (status-msg (when mini-posframe-last-message
                                    (propertize mini-posframe-last-message 'face 'error)))
-                     (max-width mini-posframe-width))
+                     (max-width (max 1 mini-posframe-width)))
                 (when (and raw (stringp raw))
-                  (let* ((text (if (> (length raw) max-width)
-                                   (substring raw (- (length raw) max-width))
-                                 raw))
-                         ;; fake cursor insertion
-                         (cursor-idx (max 0 (min (length text)
+                  (let* (;; Insert a fake cursor without truncating multiline input.
+                         (cursor-idx (max 0 (min (length raw)
                                                  (- (point) (point-min)))))
-                         (before (if (> cursor-idx 0) (substring text 0 cursor-idx) ""))
-                         (cursor-char (if (< cursor-idx (length text))
-                                          (substring text cursor-idx (1+ cursor-idx))
+                         (before (if (> cursor-idx 0) (substring raw 0 cursor-idx) ""))
+                         (cursor-char (if (< cursor-idx (length raw))
+                                          (substring raw cursor-idx (1+ cursor-idx))
                                         " "))
-                         (after (if (< cursor-idx (length text))
-                                    (substring text (1+ cursor-idx))
+                         (after (if (< cursor-idx (length raw))
+                                    (substring raw (1+ cursor-idx))
                                   ""))
                          (cursor (propertize cursor-char 'face '(:inverse-video t)))
                          (with-cursor (concat before cursor after))
                          (full (if status-msg (concat with-cursor "  " status-msg) with-cursor))
+                         (content-height
+                          (mini-posframe--display-line-count full max-width))
+                         (height (max mini-posframe-height content-height))
                          (bg (face-background (mini-posframe--resolve-background-face) nil t)))
-                    (save-window-excursion
-                      (posframe-show mini-posframe-buffer
-                                     :string (if (string-empty-p full) " " full)
-                                     :poshandler mini-posframe-poshandler
-                                     :width mini-posframe-width
-                                     :height mini-posframe-height
-                                     :face 'mini-posframe-face
-                                     :foreground-color (face-attribute 'mini-posframe-face :foreground nil t)
-                                     :background-color bg
-                                     :internal-border-width mini-posframe-border-width
-                                     :internal-border-color (face-attribute 'mini-posframe-border-face :background nil t)
-                                     :font (format "%s-%d"
-                                                   (face-attribute 'default :family)
-                                                   (round (* mini-posframe-font-size
-                                                             (/ (face-attribute 'default :height)
-                                                                10.0))))
-                                     :override-parameters mini-posframe-parameters)))))))))
+                    (if (and mini-posframe-max-height
+                             (> height mini-posframe-max-height))
+                        (mini-posframe--disable-session)
+                      (save-window-excursion
+                        (posframe-show mini-posframe-buffer
+                                       :string (if (string-empty-p full) " " full)
+                                       :poshandler mini-posframe-poshandler
+                                       :width max-width
+                                       :height height
+                                       :face 'mini-posframe-face
+                                       :foreground-color (face-attribute 'mini-posframe-face :foreground nil t)
+                                       :background-color bg
+                                       :internal-border-width mini-posframe-border-width
+                                       :internal-border-color (face-attribute 'mini-posframe-border-face :background nil t)
+                                       :font (format "%s-%d"
+                                                     (face-attribute 'default :family)
+                                                     (round (* mini-posframe-font-size
+                                                               (/ (face-attribute 'default :height)
+                                                                  10.0))))
+                                       :override-parameters mini-posframe-parameters))))))))))
     (error
-     (mini-posframe-hide))))
+     (let ((win (active-minibuffer-window)))
+       (when win
+         (with-current-buffer (window-buffer win)
+           (mini-posframe--disable-session)))))))
 
 (defun mini-posframe-hide ()
   "Hide mini-posframe and reset state."
@@ -388,10 +434,14 @@ the face exists; otherwise fall back to `default'."
 (defun mini-posframe-hide-minibuffer-maybe ()
   "Make real minibuffer invisible (input still works)."
   (when (mini-posframe-active-p)
-    (let* ((bg (face-background (mini-posframe--resolve-background-face) nil t))
-           (ov (make-overlay (point-min) (point-max) nil nil t)))
-      (overlay-put ov 'window (selected-window))
-      (overlay-put ov 'face `(:foreground ,bg :background ,bg))
+    (let ((bg (face-background (mini-posframe--resolve-background-face) nil t)))
+      (unless (overlayp mini-posframe--minibuffer-overlay)
+        (setq mini-posframe--minibuffer-overlay
+              (make-overlay (point-min) (point-max) nil nil t)))
+      (move-overlay mini-posframe--minibuffer-overlay (point-min) (point-max))
+      (overlay-put mini-posframe--minibuffer-overlay 'window (selected-window))
+      (overlay-put mini-posframe--minibuffer-overlay
+                   'face `(:foreground ,bg :background ,bg))
       (setq-local cursor-type nil))))
 
 ;; ───────────────────────────────────────────────────────────────────
@@ -401,12 +451,18 @@ the face exists; otherwise fall back to `default'."
 (defun mini-posframe-session-start ()
   "Enable posframe refresh only for this minibuffer session."
   (when mini-posframe-mode
+    (setq-local mini-posframe--session-disabled nil
+                mini-posframe--minibuffer-overlay nil
+                mini-posframe--original-cursor-type cursor-type)
     ;; Hooks are buffer-local to minibuffer
     (add-hook 'post-command-hook #'mini-posframe-refresh nil t)
-    (add-hook 'post-command-hook #'mini-posframe-hide-minibuffer-maybe nil t)))
+    (add-hook 'post-command-hook #'mini-posframe-hide-minibuffer-maybe nil t)
+    (mini-posframe-refresh)
+    (mini-posframe-hide-minibuffer-maybe)))
 
 (defun mini-posframe-session-end ()
   "Disable posframe refresh after minibuffer session ends."
+  (mini-posframe--restore-minibuffer)
   (mini-posframe-hide)
   (remove-hook 'post-command-hook #'mini-posframe-refresh t)
   (remove-hook 'post-command-hook #'mini-posframe-hide-minibuffer-maybe t))

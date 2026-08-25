@@ -52,7 +52,8 @@ See [[*Hotkeys][Hotkeys]] for positioning helpers.
 
 ** Size
 + =mini-posframe-width= (default =60=) – width in characters.
-+ =mini-posframe-height= (default =1=) – fixed height in lines. When set to =1=, height is determined dynamically from content.
++ =mini-posframe-height= (default =1=) – minimum height in lines. The frame expands vertically for multiline or wrapped content.
++ =mini-posframe-max-height= (default =10=) – vertical limit in lines. If a prompt needs more space, mini-posframe is bypassed for that minibuffer session and the regular minibuffer remains visible. Set it to =nil= for no limit.
 + There's an interactive resize helper function, =mini-posframe-resize= that allows you to set it dynamically.
 
 ** Appearance
@@ -82,7 +83,8 @@ Optional integration keeps behavior consistent with =helm-posframe=:
 * Defaults Summary
 + Position: =top-center= (10% from top, centered horizontally).
 + Width: =60= characters.
-+ Height: dynamic (=1= → auto-fit).
++ Minimum height: =1= line (expands to fit content).
++ Maximum height: =10= lines (larger prompts use the regular minibuffer).
 + Font scale: =1.4= relative to =default=.
 + Border width: =3=.
 + Parameters: ~(undecorated . nil)~
