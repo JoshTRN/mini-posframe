@@ -349,12 +349,41 @@ the face exists; otherwise fall back to `default'."
        (not (bound-and-true-p helm-alive-p))))
 
 (defun mini-posframe--display-line-count (string width)
-  "Return the number of display lines needed by STRING at WIDTH."
+  "Return the number of word-wrapped display lines for STRING at WIDTH.
+Prefer wrapping at whitespace, as `word-wrap' does, and hard-wrap a word
+only when the word itself is wider than WIDTH."
   (let ((width (max 1 width))
         (count 0))
     (dolist (line (split-string string "\n" nil) (max 1 count))
-      (setq count (+ count
-                     (max 1 (ceiling (float (string-width line)) width)))))))
+      (let ((start 0)
+            (column 0)
+            (last-break nil)
+            (index 0)
+            (length (length line)))
+        (if (= length 0)
+            (setq count (1+ count))
+          (while (< index length)
+            (let* ((char (aref line index))
+                   (char-width (max 0 (char-width char))))
+              (if (and (> column 0) (> (+ column char-width) width))
+                  (progn
+                    (setq count (1+ count))
+                    (if (and last-break (> last-break start))
+                        (setq start last-break
+                              index last-break)
+                      (setq start index))
+                    (setq column 0
+                          last-break nil))
+                (setq column (+ column char-width)
+                      index (1+ index))
+                (when (memq char '(?\s ?\t))
+                  (setq last-break index)))))
+          (setq count (1+ count)))))))
+
+(defun mini-posframe--prepare-buffer ()
+  "Configure the current posframe buffer for visual-line style wrapping."
+  (setq-local truncate-lines nil
+              word-wrap t))
 
 (defun mini-posframe--restore-minibuffer ()
   "Remove mini-posframe's visual hiding from the current minibuffer."
@@ -403,6 +432,8 @@ the face exists; otherwise fall back to `default'."
                     (if (and mini-posframe-max-height
                              (> height mini-posframe-max-height))
                         (mini-posframe--disable-session)
+                      (with-current-buffer (get-buffer-create mini-posframe-buffer)
+                        (mini-posframe--prepare-buffer))
                       (save-window-excursion
                         (posframe-show mini-posframe-buffer
                                        :string (if (string-empty-p full) " " full)

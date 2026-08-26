@@ -11,6 +11,19 @@
   (should (= 3 (mini-posframe--display-line-count "123456789" 4)))
   (should (= 3 (mini-posframe--display-line-count "12345\n6" 4))))
 
+(ert-deftest mini-posframe-display-line-count-prefers-word-boundaries ()
+  ;; Character-count wrapping would use two lines here.  Word wrapping
+  ;; keeps each four-character word intact and therefore needs three.
+  (should (= 3 (mini-posframe--display-line-count "1234 1234 1234" 8))))
+
+(ert-deftest mini-posframe-prepare-buffer-enables-visual-line-wrapping ()
+  (with-temp-buffer
+    (setq-local truncate-lines t
+                word-wrap nil)
+    (mini-posframe--prepare-buffer)
+    (should-not truncate-lines)
+    (should word-wrap)))
+
 (ert-deftest mini-posframe-disable-session-restores-minibuffer ()
   (with-temp-buffer
     (let ((mini-posframe--original-cursor-type 'box)

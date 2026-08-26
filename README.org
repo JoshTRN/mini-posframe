@@ -52,7 +52,7 @@ See [[*Hotkeys][Hotkeys]] for positioning helpers.
 
 ** Size
 + =mini-posframe-width= (default =60=) – width in characters.
-+ =mini-posframe-height= (default =1=) – minimum height in lines. The frame expands vertically for multiline or wrapped content.
++ =mini-posframe-height= (default =1=) – minimum height in lines. The frame expands vertically for multiline content and uses visual-line style word wrapping once content reaches the width limit.
 + =mini-posframe-max-height= (default =10=) – vertical limit in lines. If a prompt needs more space, mini-posframe is bypassed for that minibuffer session and the regular minibuffer remains visible. Set it to =nil= for no limit.
 + There's an interactive resize helper function, =mini-posframe-resize= that allows you to set it dynamically.
 
