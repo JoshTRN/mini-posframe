@@ -439,7 +439,14 @@ only when the word itself is wider than WIDTH."
                                        :string (if (string-empty-p full) " " full)
                                        :poshandler mini-posframe-poshandler
                                        :width max-width
-                                       :height height
+                                       ;; Let Emacs measure the rendered lines.  A
+                                       ;; fixed :height based on string columns is
+                                       ;; wrong when the posframe font is scaled:
+                                       ;; the text wraps before MAX-WIDTH columns
+                                       ;; and the frame never notices the new row.
+                                       :min-height mini-posframe-height
+                                       :max-height mini-posframe-max-height
+                                       :lines-truncate nil
                                        :face 'mini-posframe-face
                                        :foreground-color (face-attribute 'mini-posframe-face :foreground nil t)
                                        :background-color bg
