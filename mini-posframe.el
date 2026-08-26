@@ -51,7 +51,7 @@
 ;; ───────────────────────────────────────────────────────────────────
 
 (defcustom mini-posframe-width 60
-  "The width of mini-posframe (in characters)."
+  "The width of mini-posframe, in current-frame character columns."
   :group 'mini-posframe
   :type 'integer)
 
@@ -380,6 +380,28 @@ only when the word itself is wider than WIDTH."
                   (setq last-break index)))))
           (setq count (1+ count)))))))
 
+(defun mini-posframe--font-adjusted-width (width font)
+  "Return how many FONT columns fit in WIDTH current-frame columns.
+`posframe-show' interprets a lone `:width' using the posframe font.
+Translate the configured width so increasing `mini-posframe-font-size'
+does not also increase the posframe's pixel width."
+  (let* ((base-pixel-width (max 1 (default-font-width)))
+         (font-info (ignore-errors (font-info font (selected-frame))))
+         (space-width (and (vectorp font-info)
+                           (> (length font-info) 10)
+                           (aref font-info 10)))
+         (average-width (and (vectorp font-info)
+                             (> (length font-info) 11)
+                             (aref font-info 11)))
+         (font-pixel-width
+          (cond ((and (numberp average-width) (> average-width 0)) average-width)
+                ((and (numberp space-width) (> space-width 0)) space-width))))
+    (max 1
+         (if font-pixel-width
+             (floor (/ (* (max 1 width) base-pixel-width)
+                       (float font-pixel-width)))
+           (max 1 width)))))
+
 (defun mini-posframe--prepare-buffer ()
   "Configure the current posframe buffer for visual-line style wrapping."
   (setq-local truncate-lines nil
@@ -410,7 +432,15 @@ only when the word itself is wider than WIDTH."
                             (buffer-substring (point-min) (point-max))))
                      (status-msg (when mini-posframe-last-message
                                    (propertize mini-posframe-last-message 'face 'error)))
-                     (max-width (max 1 mini-posframe-width)))
+                     (requested-width
+                      (min (max 1 mini-posframe-width) (frame-width)))
+                     (font (format "%s-%d"
+                                   (face-attribute 'default :family)
+                                   (round (* mini-posframe-font-size
+                                             (/ (face-attribute 'default :height)
+                                                10.0)))))
+                     (posframe-width
+                      (mini-posframe--font-adjusted-width requested-width font)))
                 (when (and raw (stringp raw))
                   (let* (;; Insert a fake cursor without truncating multiline input.
                          (cursor-idx (max 0 (min (length raw)
@@ -426,7 +456,7 @@ only when the word itself is wider than WIDTH."
                          (with-cursor (concat before cursor after))
                          (full (if status-msg (concat with-cursor "  " status-msg) with-cursor))
                          (content-height
-                          (mini-posframe--display-line-count full max-width))
+                          (mini-posframe--display-line-count full posframe-width))
                          (height (max mini-posframe-height content-height))
                          (bg (face-background (mini-posframe--resolve-background-face) nil t)))
                     (if (and mini-posframe-max-height
@@ -438,12 +468,12 @@ only when the word itself is wider than WIDTH."
                         (posframe-show mini-posframe-buffer
                                        :string (if (string-empty-p full) " " full)
                                        :poshandler mini-posframe-poshandler
-                                       :width max-width
+                                       :width posframe-width
+                                       :max-width posframe-width
                                        ;; Let Emacs measure the rendered lines.  A
                                        ;; fixed :height based on string columns is
-                                       ;; wrong when the posframe font is scaled:
-                                       ;; the text wraps before MAX-WIDTH columns
-                                       ;; and the frame never notices the new row.
+                                       ;; wrong when glyph metrics or faces alter
+                                       ;; where the text wraps.
                                        :min-height mini-posframe-height
                                        :max-height mini-posframe-max-height
                                        :lines-truncate nil
@@ -452,11 +482,7 @@ only when the word itself is wider than WIDTH."
                                        :background-color bg
                                        :internal-border-width mini-posframe-border-width
                                        :internal-border-color (face-attribute 'mini-posframe-border-face :background nil t)
-                                       :font (format "%s-%d"
-                                                     (face-attribute 'default :family)
-                                                     (round (* mini-posframe-font-size
-                                                               (/ (face-attribute 'default :height)
-                                                                  10.0))))
+                                       :font font
                                        :override-parameters mini-posframe-parameters))))))))))
     (error
      (let ((win (active-minibuffer-window)))

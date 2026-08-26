@@ -24,6 +24,15 @@
     (should-not truncate-lines)
     (should word-wrap)))
 
+(ert-deftest mini-posframe-font-adjusted-width-preserves-pixel-width ()
+  ;; 140 columns in a 7px parent font should become 98 columns in the
+  ;; posframe's 10px font: both are 980 pixels wide.
+  (cl-letf (((symbol-function 'default-font-width) (lambda () 7))
+            ((symbol-function 'font-info)
+             (lambda (&rest _)
+               [nil nil nil nil nil nil nil nil nil nil 5 10 nil nil])))
+    (should (= 98 (mini-posframe--font-adjusted-width 140 "Menlo-17")))))
+
 (ert-deftest mini-posframe-refresh-lets-posframe-fit-rendered-height ()
   (with-temp-buffer
     (insert "a line long enough to wrap in a scaled posframe")
@@ -35,12 +44,17 @@
       (cl-letf (((symbol-function 'mini-posframe-active-p) (lambda () t))
                 ((symbol-function 'active-minibuffer-window)
                  (lambda () (selected-window)))
+                ((symbol-function 'default-font-width) (lambda () 7))
+                ((symbol-function 'font-info)
+                 (lambda (&rest _)
+                   [nil nil nil nil nil nil nil nil nil nil 5 10 nil nil]))
                 ((symbol-function 'posframe-show)
                  (lambda (&rest arguments)
                    (setq show-arguments arguments))))
         (mini-posframe-refresh))
       (should show-arguments)
-      (should (= 20 (plist-get (cdr show-arguments) :width)))
+      (should (= 14 (plist-get (cdr show-arguments) :width)))
+      (should (= 14 (plist-get (cdr show-arguments) :max-width)))
       (should (= 1 (plist-get (cdr show-arguments) :min-height)))
       (should (= 10 (plist-get (cdr show-arguments) :max-height)))
       (should-not (plist-member (cdr show-arguments) :height))
