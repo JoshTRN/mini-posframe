@@ -310,6 +310,19 @@ the face exists; otherwise fall back to `default'."
   (setq mini-posframe-position 'bottom-right)
   (message "mini-posframe position: bottom-right"))
 
+(defun mini-posframe-select-position ()
+  "Select `mini-posframe-position' interactively with completion."
+  (interactive)
+  (let ((choice (completing-read
+                 (format "mini-posframe position (current: %s): "
+                         mini-posframe-position)
+                 '("top-left" "top-center" "top-right"
+                   "left" "center" "right"
+                   "bottom-left" "bottom-center" "bottom-right")
+                 nil t)))
+    (setq mini-posframe-position (intern choice))
+    (message "mini-posframe position: %s" choice)))
+
 (defun mini-posframe-resize ()
   "Interactively resize mini-posframe width and font scale."
   (interactive)
