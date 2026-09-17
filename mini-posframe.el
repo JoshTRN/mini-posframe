@@ -125,12 +125,22 @@ the face exists; otherwise fall back to `default'."
   :group 'mini-posframe
   :type '(choice (const :tag "Auto (solaire/default)" nil) face))
 
+(defcustom mini-posframe-debug nil
+  "When non-nil, log diagnostic messages to the echo area."
+  :group 'mini-posframe
+  :type 'boolean)
+
 ;; ───────────────────────────────────────────────────────────────────
 ;; Internal vars
 ;; ───────────────────────────────────────────────────────────────────
 
 (defvar mini-posframe-buffer " *mini-posframe*"
   "Buffer used for mini-posframe display.")
+
+(defun mini-posframe--log (fmt &rest args)
+  "Log FMT with ARGS when `mini-posframe-debug' is non-nil."
+  (when mini-posframe-debug
+    (apply #'message (concat "[mini-posframe] " fmt) args)))
 
 (defvar mini-posframe-last-message nil
   "Last status message to display in the mini-posframe (e.g., Evil search).")
@@ -540,12 +550,12 @@ does not also increase the posframe's pixel width."
         (add-hook 'minibuffer-setup-hook #'mini-posframe-session-start)
         (add-hook 'minibuffer-exit-hook  #'mini-posframe-session-end)
         (add-hook 'post-command-hook     #'mini-posframe-auto-cleanup)
-        (message "mini-posframe: enabled"))
+        (mini-posframe--log "enabled"))
     (remove-hook 'minibuffer-setup-hook #'mini-posframe-session-start)
     (remove-hook 'minibuffer-exit-hook  #'mini-posframe-session-end)
     (remove-hook 'post-command-hook     #'mini-posframe-auto-cleanup)
     (mini-posframe-hide)
-    (message "mini-posframe: disabled")))
+    (mini-posframe--log "disabled")))
 
 ;; ───────────────────────────────────────────────────────────────────
 ;; Reset & cleanup
@@ -573,7 +583,7 @@ Also remove this function from `post-command-hook' until next session."
     (remove-hook 'post-command-hook #'mini-posframe-hide-minibuffer-maybe t)
     ;; Remove this global watcher until next minibuffer session
     (remove-hook 'post-command-hook #'mini-posframe-auto-cleanup)
-    (message "[mini-posframe] Auto-cleaned and disabled global watcher")))
+    (mini-posframe--log "Auto-cleaned and disabled global watcher")))
 
 ;; ───────────────────────────────────────────────────────────────────
 ;; Debug helper
@@ -581,8 +591,8 @@ Also remove this function from `post-command-hook' until next session."
 
 (defun mini-posframe-debug-exit ()
   "Log when the minibuffer exit hook fires (for debugging)."
-  (message "[mini-posframe DEBUG] minibuffer-exit-hook fired in %S"
-           (current-buffer)))
+  (mini-posframe--log "minibuffer-exit-hook fired in %S"
+                      (current-buffer)))
 (add-hook 'minibuffer-exit-hook #'mini-posframe-debug-exit)
 
 ;; ───────────────────────────────────────────────────────────────────
